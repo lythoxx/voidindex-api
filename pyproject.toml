@@ -1,0 +1,27 @@
+[project]
+name = "VoidIndex-API"
+version = "1.0.0"
+readme = "README.md"
+authors= [
+    { name = "Maximilian Broudré", email= "lythox@lxio.dev" }
+]
+description = "A NASA Mars Photo API"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "flask",
+    "flask-cors"
+]
+
+
+[build-system]
+requires = ["flit_core<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "voidindex_api"
+
+[project.urls]
+Home = "https://voidindex.space"
