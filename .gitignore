@@ -46,3 +46,4 @@ MER_data/
 # OS
 .DS_Store
 Thumbs.db
+lib64

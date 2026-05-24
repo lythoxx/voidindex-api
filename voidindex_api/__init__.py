@@ -11,7 +11,7 @@ def create_app(test_config=None):
         app.config.update(test_config)
 
     app.config.from_mapping(
-        DATABASE="/home/lythox/voidindex/var/voidindex-instance/astro.db"
+        DATABASE_DSN="host=127.0.0.1 dbname=voidindex user=voidindex password=l1nk15t(00l",
     )
 
     app.register_blueprint(bp)

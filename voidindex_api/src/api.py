@@ -1,18 +1,25 @@
-from flask import Blueprint, jsonify, request, current_app, Response
+from flask import Blueprint, jsonify, request, current_app, Response, g
 import datetime
-import sqlite3
 import mimetypes
 
+import psycopg2
+import psycopg2.extras
+
+
 def get_db():
-    connection = sqlite3.connect(current_app.config["DATABASE"])
-    connection.row_factory = sqlite3.Row
-    return connection
+    if 'db' not in g:
+        g.db = psycopg2.connect(
+            current_app.config['DATABASE_DSN'],
+            cursor_factory=psycopg2.extras.RealDictCursor
+        )
+    return g.db
 
 
 #: Vehicles names that are present in the database.
 VEHICLES = ["perseverance", "curiosity", "ingenuity", "insight", "opportunity", "spirit"]
 
 bp = Blueprint('api', __name__)
+
 
 @bp.route("/mars/vehicles")
 def vehicles_list():
@@ -32,6 +39,7 @@ def vehicles_list():
         "vehicles": VEHICLES,
         "timestamp": datetime.datetime.utcnow().isoformat()
     })
+
 
 @bp.route("/mars/<vehicle_name>")
 def vehicle_images(vehicle_name):
@@ -100,7 +108,6 @@ def vehicle_images(vehicle_name):
         *vehicle_name* is not present in :data:`VEHICLES`.
     """
 
-    # Validate vehicle name
     if vehicle_name.lower() not in VEHICLES:
         return jsonify({
             "error": "Invalid vehicle name",
@@ -109,8 +116,8 @@ def vehicle_images(vehicle_name):
 
     vehicle_name = vehicle_name.lower()
     db = get_db()
+    cur = db.cursor()
 
-    # Get query parameters for filtering
     camera = request.args.get('camera', type=str)
     sol_min = request.args.get('sol_min', type=int)
     sol_max = request.args.get('sol_max', type=int)
@@ -118,72 +125,85 @@ def vehicle_images(vehicle_name):
     date_from = request.args.get('date_from', type=str)
     date_to = request.args.get('date_to', type=str)
 
-    # Get query parameters for sorting and pagination
     sort_by = request.args.get('sort', default='date', type=str)
     order = request.args.get('order', default='desc', type=str)
     page = request.args.get('page', default=1, type=int)
     limit = request.args.get('limit', default=50, type=int)
 
-    # Validate sort_by
     valid_sort_fields = ['date', 'sol', 'nasa_id', 'camera', 'id']
     if sort_by not in valid_sort_fields:
         sort_by = 'date'
-
-    # Validate order
     if order.lower() not in ['asc', 'desc']:
         order = 'desc'
-
-    # Validate pagination
     if page < 1:
         page = 1
     if limit < 1 or limit > 100:
         limit = 50
 
-    # Build query
-    query = f"SELECT * FROM {vehicle_name} WHERE 1=1"
+    where_clauses = ["1=1"]
     params = []
 
-    # Apply filters
     if camera:
-        query += " AND camera = ?"
+        where_clauses.append("camera = %s")
         params.append(camera)
 
     if sol is not None:
-        query += " AND sol = ?"
+        where_clauses.append("sol = %s")
         params.append(sol)
     elif sol_min is not None or sol_max is not None:
         if sol_min is not None:
-            query += " AND sol >= ?"
+            where_clauses.append("sol >= %s")
             params.append(sol_min)
         if sol_max is not None:
-            query += " AND sol <= ?"
+            where_clauses.append("sol <= %s")
             params.append(sol_max)
 
     if date_from:
-        query += " AND date >= ?"
+        where_clauses.append("date >= %s")
         params.append(date_from)
-
     if date_to:
-        query += " AND date <= ?"
+        where_clauses.append("date <= %s")
         params.append(date_to)
 
-    # Add sorting
-    query += f" ORDER BY {sort_by} {order.upper()}"
+    where_sql = " WHERE " + " AND ".join(where_clauses)
 
-    # Get total count before pagination
-    count_query = query.replace(f"SELECT * FROM {vehicle_name}", f"SELECT COUNT(*) FROM {vehicle_name}")
-    total_count = db.execute(count_query, params).fetchone()[0]
+    has_sol_range = sol_min is not None or sol_max is not None
+    has_date_filter = date_from is not None or date_to is not None
 
-    # Add pagination
+    if camera and not has_sol_range and sol is None and not has_date_filter:
+        # camera_counts cache — camera only filter
+        cur.execute(
+            "SELECT count FROM camera_counts WHERE vehicle = %s AND camera = %s",
+            (vehicle_name, camera)
+        )
+        row = cur.fetchone()
+        total_count = row["count"] if row else 0
+
+    elif has_sol_range and sol is None and not camera and not has_date_filter:
+        # sol_counts cache — sol range only filter
+        sol_min_val = sol_min if sol_min is not None else 0
+        sol_max_val = sol_max if sol_max is not None else 99999
+        cur.execute(
+            "SELECT COALESCE(SUM(count), 0) as count FROM sol_counts WHERE vehicle = %s AND sol >= %s AND sol <= %s",
+            (vehicle_name, sol_min_val, sol_max_val)
+        )
+        total_count = cur.fetchone()["count"]
+
+    else:
+        # fallback — live COUNT
+        cur.execute(
+            f"SELECT COUNT(*) as count FROM {vehicle_name}{where_sql}",
+            params
+        )
+        total_count = cur.fetchone()["count"]
+
     offset = (page - 1) * limit
-    query += " LIMIT ? OFFSET ?"
-    params.extend([limit, offset])
+    cur.execute(
+        f"SELECT * FROM {vehicle_name}{where_sql} ORDER BY {sort_by} {order.upper()} LIMIT %s OFFSET %s",
+        (*params, limit, offset)
+    )
+    rows = cur.fetchall()
 
-    # Execute query
-    cursor = db.execute(query, params)
-    rows = cursor.fetchall()
-
-    # Convert rows to dictionaries
     images = []
     for row in rows:
         images.append({
@@ -198,8 +218,7 @@ def vehicle_images(vehicle_name):
             "sol": row["sol"]
         })
 
-    # Calculate pagination metadata
-    total_pages = (total_count + limit - 1) // limit  # Ceiling division
+    total_pages = (total_count + limit - 1) // limit
 
     return jsonify({
         "vehicle": vehicle_name,
@@ -225,15 +244,12 @@ def vehicle_images(vehicle_name):
         "timestamp": datetime.datetime.utcnow().isoformat()
     })
 
+
 @bp.route("/mars/<vehicle_name>/cameras")
 def vehicle_cameras(vehicle_name):
     """List every camera that has recorded images for a specific vehicle.
 
     **Route:** ``GET /api/mars/<vehicle_name>/cameras``
-
-    Camera records are sourced from the ``cameras`` reference table and
-    cross-referenced with the distinct camera codes present in the vehicle's
-    image table, so only cameras with at least one image are returned.
 
     :param vehicle_name: Vehicle name (one of :data:`VEHICLES`).
         Case-insensitive.
@@ -263,21 +279,26 @@ def vehicle_cameras(vehicle_name):
 
     vehicle_name = vehicle_name.lower()
     db = get_db()
+    cur = db.cursor()
 
-    # Get distinct cameras
-    cursor = db.execute(f"SELECT DISTINCT camera FROM {vehicle_name} WHERE camera IS NOT NULL ORDER BY camera")
-    cameras = [row[0] for row in cursor.fetchall()]
+    cur.execute(f"SELECT DISTINCT camera FROM {vehicle_name} WHERE camera IS NOT NULL ORDER BY camera")
+    cameras = [row["camera"] for row in cur.fetchall()]
+
     full_names = {}
     for camera in cameras:
-        cursor = db.execute("SELECT full_name FROM cameras WHERE code = ? and vehicle = ?", (camera,vehicle_name))
-        result = cursor.fetchone()
-        full_names[camera] = result[0] if result else camera
+        cur.execute(
+            "SELECT full_name FROM cameras WHERE code = %s AND vehicle = %s",
+            (camera, vehicle_name)
+        )
+        result = cur.fetchone()
+        full_names[camera] = result["full_name"] if result else camera
 
     return jsonify({
         "vehicle": vehicle_name,
         "cameras": [{"code": cam, "full_name": full_names.get(cam, cam)} for cam in cameras],
         "timestamp": datetime.datetime.utcnow().isoformat()
     })
+
 
 @bp.route("/mars/<vehicle_name>/stats")
 def vehicle_stats(vehicle_name):
@@ -316,27 +337,23 @@ def vehicle_stats(vehicle_name):
 
     vehicle_name = vehicle_name.lower()
     db = get_db()
+    cur = db.cursor()
 
-    # Get stats
     stats = {}
 
-    # Total images
-    cursor = db.execute(f"SELECT COUNT(*) FROM {vehicle_name}")
-    stats["total_images"] = cursor.fetchone()[0]
+    cur.execute(
+        f"SELECT COUNT(*) as total, MIN(sol) as sol_min, MAX(sol) as sol_max, MIN(date) as date_min, MAX(date) as date_max FROM {vehicle_name}"
+    )
+    row = cur.fetchone()
+    stats["total_images"] = row["total"]
+    stats["sol_range"] = {"min": row["sol_min"], "max": row["sol_max"]}
+    stats["date_range"] = {"min": row["date_min"], "max": row["date_max"]}
 
-    # Sol range
-    cursor = db.execute(f"SELECT MIN(sol), MAX(sol) FROM {vehicle_name}")
-    sol_min, sol_max = cursor.fetchone()
-    stats["sol_range"] = {"min": sol_min, "max": sol_max}
-
-    # Date range
-    cursor = db.execute(f"SELECT MIN(date), MAX(date) FROM {vehicle_name}")
-    date_min, date_max = cursor.fetchone()
-    stats["date_range"] = {"min": date_min, "max": date_max}
-
-    # Camera counts
-    cursor = db.execute(f"SELECT camera, COUNT(*) as count FROM {vehicle_name} GROUP BY camera ORDER BY count DESC")
-    stats["cameras"] = {row[0]: row[1] for row in cursor.fetchall() if row[0]}
+    cur.execute(
+        "SELECT camera, count FROM camera_counts WHERE vehicle = %s ORDER BY count DESC",
+        (vehicle_name,)
+    )
+    stats["cameras"] = {row["camera"]: row["count"] for row in cur.fetchall() if row["camera"]}
 
     return jsonify({
         "vehicle": vehicle_name,
@@ -350,10 +367,6 @@ def mars_index():
     """Return a self-describing index of all Mars endpoints and their parameters.
 
     **Route:** ``GET /api/mars``
-
-    Useful as a discovery endpoint for clients unfamiliar with the API.
-    The response mirrors the full set of query parameters accepted by
-    :func:`vehicle_images`.
 
     :returns: JSON object documenting available endpoints, the vehicle list,
         filtering parameters, and sorting parameters.
@@ -383,14 +396,12 @@ def mars_index():
         "timestamp": datetime.datetime.utcnow().isoformat()
     })
 
+
 @bp.route("/")
 def index():
     """API root — return a top-level index of all available endpoints.
 
     **Route:** ``GET /api/``
-
-    Entry point for clients exploring the API.  Lists every route grouped by
-    resource type together with supported pagination parameters.
 
     :returns: JSON object with a human-readable ``message``, an ``endpoints``
         mapping of route paths to brief descriptions, and
@@ -416,10 +427,10 @@ def index():
 
 @bp.route("/docs/")
 def docs_index():
-    print("docs_index called")
     response = Response(status=200)
     response.headers["X-Accel-Redirect"] = "/_protected_docs/index.html"
     return response
+
 
 @bp.route("/docs/<path:filename>")
 def docs_file(filename):
