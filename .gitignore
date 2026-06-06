@@ -1,0 +1,49 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environment
+bin/
+lib/
+lib64/
+include/
+pyvenv.cfg
+
+# Distribution
+*.whl
+*.tar.gz
+
+# Sphinx
+docs/_build/
+docs/build/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# MER index files (download from PDS: https://pds-imaging.jpl.nasa.gov/volumes/mer.html)
+MER_data/
+*.tab
+
+# Environment
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+lib64
