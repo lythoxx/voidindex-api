@@ -18,7 +18,7 @@ A comprehensive Mars photo API providing access to imagery from all active and c
 | Opportunity | Rover | 2004 – 2019 | 4,417,342 |
 | Spirit | Rover | 2004 – 2010 | 2,227,612 |
 | Phoenix | Lander | 2008 - 2009 | 256,434 |
-| Mars Reconnaissance Orbiter | 2005 - Present | 3,197,637 |
+| Mars Reconnaissance Orbiter | Orbiter | 2005 - Present | 3,197,637 |
 
 ---
 
