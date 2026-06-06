@@ -1,6 +1,6 @@
 # VoidIndex API
 
-A comprehensive Mars photo API providing access to imagery from all active and completed NASA Mars missions. Almost **9 million images** indexed from NASA's Planetary Data System and mission archives, with response times much faster than querying NASA directly.
+A comprehensive Mars photo API providing access to imagery from all active and completed NASA Mars missions. Around **12 million images** indexed from NASA's Planetary Data System and mission archives, with response times much faster than querying NASA directly.
 
 **Base URL:** `https://api.voidindex.space`
 **Documentation:** `https://api.voidindex.space/docs`
@@ -17,6 +17,8 @@ A comprehensive Mars photo API providing access to imagery from all active and c
 | Insight | Lander | 2018 – 2022 | 6,668 |
 | Opportunity | Rover | 2004 – 2019 | 4,417,342 |
 | Spirit | Rover | 2004 – 2010 | 2,227,612 |
+| Phoenix | Lander | 2008 - 2009 | 256,434 |
+| Mars Reconnaissance Orbiter | 2005 - Present | 3,197,637 |
 
 ---
 
