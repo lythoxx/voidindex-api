@@ -19,6 +19,13 @@ A comprehensive Mars photo API providing access to imagery from all active and c
 | Spirit | Rover | 2004 – 2010 | 2,227,612 |
 | Phoenix | Lander | 2008 - 2009 | 256,434 |
 | Mars Reconnaissance Orbiter | Orbiter | 2005 - Present | 3,197,637 |
+| Viking Lander 1 | Lander | 1976 – 1982 | 3542 |
+| Viking Lander 2 | Lander | 1976 - 1980 | 3042 |
+| Mars Global Surveyor | Orbiter | 1997 - 2006 | 241473 |
+| Mariner 9 | Orbiter | 1971 - 1972 | 7384 |
+| Pathfinder | Lander | 1997 | 16601 |
+| Sojourner | Rover | 1997 | 627 |
+| Odyssey | Orbiter | 2001 - Present | 74704 |
 
 ---
 

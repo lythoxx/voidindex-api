@@ -16,7 +16,7 @@ def get_db():
 
 
 #: Vehicles names that are present in the database.
-VEHICLES = ["perseverance", "curiosity", "ingenuity", "insight", "opportunity", "spirit", "phoenix", "mro"]
+VEHICLES = ["perseverance", "curiosity", "ingenuity", "insight", "opportunity", "spirit", "phoenix", "mro", "viking1", "viking2", "mgs", "mariner9", "pathfinder", "sojourner", "odyssey"]
 
 bp = Blueprint('api', __name__)
 
@@ -25,7 +25,7 @@ bp = Blueprint('api', __name__)
 def vehicles_list():
     """List every Mars vehicle available in the database.
 
-    **Route:** ``GET /api/mars/vehicles``
+    **Route:** ``GET /mars/vehicles``
 
     :returns: JSON object with the following keys:
 
@@ -45,7 +45,7 @@ def vehicles_list():
 def vehicle_images(vehicle_name):
     """Retrieve paginated images for a specific Mars vehicle.
 
-    **Route:** ``GET /api/mars/<vehicle_name>``
+    **Route:** ``GET /mars/<vehicle_name>``
 
     :param vehicle_name: Vehicle name (one of :data:`VEHICLES`).
         Case-insensitive.
@@ -205,7 +205,7 @@ def vehicle_images(vehicle_name):
     rows = cur.fetchall()
 
     images = []
-    sol_field = "orbit" if vehicle_name == "mro" else "sol"
+    sol_field = "orbit" if vehicle_name in ["mro", "mgs", "mariner9", "odyssey"] else "sol"
     for row in rows:
         images.append({
             "id": row["id"],
@@ -250,7 +250,7 @@ def vehicle_images(vehicle_name):
 def vehicle_cameras(vehicle_name):
     """List every camera that has recorded images for a specific vehicle.
 
-    **Route:** ``GET /api/mars/<vehicle_name>/cameras``
+    **Route:** ``GET /mars/<vehicle_name>/cameras``
 
     :param vehicle_name: Vehicle name (one of :data:`VEHICLES`).
         Case-insensitive.
@@ -305,7 +305,7 @@ def vehicle_cameras(vehicle_name):
 def vehicle_stats(vehicle_name):
     """Return aggregate statistics for a specific Mars vehicle.
 
-    **Route:** ``GET /api/mars/<vehicle_name>/stats``
+    **Route:** ``GET /mars/<vehicle_name>/stats``
 
     :param vehicle_name: Vehicle name (one of :data:`VEHICLES`).
         Case-insensitive.
@@ -355,7 +355,12 @@ def vehicle_stats(vehicle_name):
         (vehicle_name,)
     )
     stats["cameras"] = {row["camera"]: row["count"] for row in cur.fetchall() if row["camera"]}
-
+    if vehicle_name in ["mro", "mgs", "mariner9", "odyssey"]:
+        stats["orbit_range"] = stats.pop("sol_range")
+    if vehicle_name == "mariner9":
+        stats["disclaimer"] = "PDS seemingly did not provide .lbl files for Mariner 9's index, so all Mariner 9 metadata is best-effort extracted from corresponding .img files and their .lbl files. Some fields may be inaccurate."
+    if vehicle_name == "odyssey":
+        stats["disclaimer"] = "Due to confusing file structures in PDS and multiple .tab files with data, that isn't fully in their archives, Odyssey's data is best-effort and may be incomplete or inaccurate."
     return jsonify({
         "vehicle": vehicle_name,
         "stats": stats,
@@ -402,7 +407,7 @@ def mars_index():
 def index():
     """API root — return a top-level index of all available endpoints.
 
-    **Route:** ``GET /api/``
+    **Route:** ``GET /``
 
     :returns: JSON object with a human-readable ``message``, an ``endpoints``
         mapping of route paths to brief descriptions, and
