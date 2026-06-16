@@ -5,3 +5,4 @@ API Reference
    :members:
    :undoc-members:
    :show-inheritance:
+   :exclude-members: docs_file, docs_index, get_db

@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify, request, current_app, Response, g
 import datetime
 import mimetypes
+import json
+import os
 
 import psycopg2
 import psycopg2.extras
@@ -301,35 +303,17 @@ def vehicle_cameras(vehicle_name):
     })
 
 
+
+STATIC_STATS_VEHICLES = [
+    "spirit", "opportunity", "phoenix", "pathfinder", "sojourner",
+    "viking1", "viking2", "mariner9", "mgs", "ingenuity",
+    "mro", "odyssey", "insight"
+]
+
+STATS_JSON_PATH = os.path.join(os.path.dirname(__file__), "stats.json")
+
 @bp.route("/mars/<vehicle_name>/stats")
 def vehicle_stats(vehicle_name):
-    """Return aggregate statistics for a specific Mars vehicle.
-
-    **Route:** ``GET /mars/<vehicle_name>/stats``
-
-    :param vehicle_name: Vehicle name (one of :data:`VEHICLES`).
-        Case-insensitive.
-    :type vehicle_name: str
-
-    :returns: JSON object with the following keys:
-
-        - ``vehicle`` (*str*) — normalised vehicle name.
-        - ``stats`` (*dict*) — aggregate data:
-
-        - ``total_images`` (*int*) — total number of stored images.
-        - ``sol_range`` (*dict*) — ``{ "min": int, "max": int }``.
-        - ``date_range`` (*dict*) — ``{ "min": str, "max": str }``
-            with ISO-8601 date strings.
-        - ``cameras`` (*dict*) — mapping of camera code → image count,
-            ordered by descending count.
-
-        - ``timestamp`` (*str*) — UTC ISO-8601 response timestamp.
-
-    :rtype: flask.Response
-    :raises werkzeug.exceptions.NotFound: Returns HTTP 404 JSON when
-        *vehicle_name* is not present in :data:`VEHICLES`.
-    """
-
     if vehicle_name.lower() not in VEHICLES:
         return jsonify({
             "error": "Invalid vehicle name",
@@ -337,9 +321,19 @@ def vehicle_stats(vehicle_name):
         }), 404
 
     vehicle_name = vehicle_name.lower()
+
+    if vehicle_name in STATIC_STATS_VEHICLES:
+        with open(STATS_JSON_PATH) as f:
+            cached = json.load(f)
+        if vehicle_name in cached:
+            return jsonify({
+                "vehicle": vehicle_name,
+                "stats": cached[vehicle_name],
+                "timestamp": datetime.datetime.utcnow().isoformat()
+            })
+
     db = get_db()
     cur = db.cursor()
-
     stats = {}
 
     cur.execute(
@@ -355,12 +349,7 @@ def vehicle_stats(vehicle_name):
         (vehicle_name,)
     )
     stats["cameras"] = {row["camera"]: row["count"] for row in cur.fetchall() if row["camera"]}
-    if vehicle_name in ["mro", "mgs", "mariner9", "odyssey"]:
-        stats["orbit_range"] = stats.pop("sol_range")
-    if vehicle_name == "mariner9":
-        stats["disclaimer"] = "PDS seemingly did not provide .lbl files for Mariner 9's index, so all Mariner 9 metadata is best-effort extracted from corresponding .img files and their .lbl files. Some fields may be inaccurate."
-    if vehicle_name == "odyssey":
-        stats["disclaimer"] = "Due to confusing file structures in PDS and multiple .tab files with data, that isn't fully in their archives, Odyssey's data is best-effort and may be incomplete or inaccurate."
+
     return jsonify({
         "vehicle": vehicle_name,
         "stats": stats,

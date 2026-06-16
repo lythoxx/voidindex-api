@@ -1,0 +1,220 @@
+{
+    "opportunity": {
+        "cameras": {
+            "DESCAM": 6,
+            "FRONT_HAZCAM": 1,
+            "FRONT_HAZCAM_LEFT": 172813,
+            "FRONT_HAZCAM_RIGHT": 85807,
+            "MI": 164235,
+            "NAVCAM_LEFT": 784673,
+            "NAVCAM_RIGHT": 391841,
+            "PANCAM": 1,
+            "PANCAM_LEFT": 1806408,
+            "PANCAM_RIGHT": 901298,
+            "REAR_HAZCAM_LEFT": 66085,
+            "REAR_HAZCAM_RIGHT": 43730
+        },
+        "date_range": {
+            "max": "2018-06-10T16:30:47Z",
+            "min": "0000-00-00T00:00:00Z"
+        },
+        "sol_range": {
+            "max": 5111,
+            "min": 0
+        },
+            "total_images": 4416898
+    },
+    "spirit": {
+    "cameras": {
+      "DESCAM": 6,
+      "FRONT_HAZCAM_LEFT": 111811,
+      "FRONT_HAZCAM_RIGHT": 53874,
+      "MI": 83460,
+      "NAVCAM_LEFT": 428688,
+      "NAVCAM_RIGHT": 143403,
+      "PANCAM_LEFT": 1026320,
+      "PANCAM_RIGHT": 520227,
+      "REAR_HAZCAM_LEFT": 41220,
+      "REAR_HAZCAM_RIGHT": 25141
+    },
+    "date_range": {
+      "max": "2010-03-21T19:39:29Z",
+      "min": "0000-00-00T00:00:00Z"
+    },
+    "sol_range": {
+      "max": 2209,
+      "min": 1
+    },
+    "total_images": 2434150
+  },
+  "insight": {
+    "cameras": {
+      "icc": 2609,
+      "idc": 4059
+    },
+    "date_range": {
+      "max": "2022-12-11T10:28:39.090Z",
+      "min": "2018-11-26T19:46:23.996Z"
+    },
+    "sol_range": {
+      "max": 1436,
+      "min": 0
+    },
+    "total_images": 6668
+  },
+  "ingenuity": {
+    "cameras": {
+      "HELI_NAV": 13945,
+      "HELI_RTE": 608
+    },
+    "date_range": {
+      "max": "2024-02-22T01:44:30.900092",
+      "min": "2021-04-03T19:56:13.684230"
+    },
+    "sol_range": {
+      "max": 1069,
+      "min": 43
+    },
+    "total_images": 14553
+  },
+  "mro": {
+    "cameras": {
+      "CTX": 157825,
+      "HiRISE": 2878451,
+      "MARCI": 161361
+    },
+    "date_range": {
+      "max": "2026-05-06T09:46:13",
+      "min": "2005-08-15T15:13:31.318"
+    },
+    "orbit_range": {
+      "max": 92698,
+      "min": -4434
+    },
+    "total_images": 3197637
+  },
+  "viking1": {
+    "cameras": {
+      "CAMERA_1": 2018,
+      "CAMERA_2": 1524
+    },
+    "date_range": {
+      "max": "1982-11-05T20:46:39Z",
+      "min": "1976-07-20T11:53:15Z"
+    },
+    "sol_range": {
+      "max": 2238,
+      "min": 0
+    },
+    "total_images": 3542
+  },
+  "viking2": {
+    "cameras": {
+      "CAMERA_1": 1301,
+      "CAMERA_2": 1742
+    },
+    "date_range": {
+      "max": "1980-02-01T03:35:27Z",
+      "min": "1976-09-03T22:37:43Z"
+    },
+    "sol_range": {
+      "max": 1212,
+      "min": 0
+    },
+    "total_images": 3043
+  },
+  "mgs": {
+    "cameras": {
+      "MOC-NA": 95797,
+      "MOC-WA": 145676
+    },
+    "date_range": {
+      "max": "2006-10-17T07:01:42.18",
+      "min": "1999-02-28T22:05:54.11"
+    },
+    "orbit_range": {
+      "max": 33998,
+      "min": -97
+    },
+    "total_images": 241473
+  },
+  "mariner9": {
+    "cameras": {
+      "ISS-A": 3575,
+      "ISS-B": 3809
+    },
+    "date_range": {
+      "max": "1972-10-17T00:53:14.000Z",
+      "min": "1971-11-11T08:33:19.000Z"
+    },
+    "disclaimer": "PDS seemingly did not provide .lbl files for Mariner 9's index, so all Mariner 9 metadata is best-effort extracted from corresponding .img files and their .lbl files. Some fields may be inaccurate.",
+    "orbit_range": {
+      "max": 676,
+      "min": 0
+    },
+    "total_images": 7384
+  },
+  "pathfinder": {
+    "cameras": {
+      "IMP": 16601
+    },
+    "date_range": {
+      "max": "1997-09-27T10:14:35.340Z",
+      "min": "1996-12-16T19:31:24.600Z"
+    },
+    "sol_range": {
+      "max": 83,
+      "min": -194
+    },
+    "total_images": 16601
+  },
+  "sojourner": {
+    "cameras": {
+      "SIS-CLR": 251,
+      "SIS-LEFT": 179,
+      "SIS-REAR": 4,
+      "SIS-RIGHT": 193
+    },
+    "date_range": {
+      "max": "1997-09-25T04:52:07.936Z",
+      "min": "1997-07-05T02:18:30.266Z"
+    },
+    "sol_range": {
+      "max": 81,
+      "min": 1
+    },
+    "total_images": 627
+  },
+  "odyssey": {
+    "cameras": {
+      "THEMIS-IR": 29347,
+      "THEMIS-VIS": 45357
+    },
+    "date_range": {
+      "max": "2026-02-17T16:42:44",
+      "min": "2015-06-25T13:23:34"
+    },
+    "disclaimer": "Due to confusing file structures in PDS and multiple .tab files with data, that isn't fully in their archives, Odyssey's data is best-effort and may be incomplete or inaccurate.",
+    "orbit_range": {
+      "max": 99999,
+      "min": 0
+    },
+    "total_images": 74704
+  },
+  "phoenix": {
+    "cameras": {
+      "OM": 6687,
+      "RAC": 13385,
+      "SSI": 236362
+    },
+    "date_range": {
+      "max": "2009-04-20T22:20:19",
+      "min": "2008-05-30T03:07:10.000"
+    },
+    "sol_range": {
+      "max": 151,
+      "min": 0
+    },
+    "total_images": 256434
+  }
+}
