@@ -314,6 +314,32 @@ STATS_JSON_PATH = os.path.join(os.path.dirname(__file__), "stats.json")
 
 @bp.route("/mars/<vehicle_name>/stats")
 def vehicle_stats(vehicle_name):
+    """Return aggregate statistics for a specific Mars vehicle.
+
+    **Route:** ``GET /mars/<vehicle_name>/stats``
+
+    :param vehicle_name: Vehicle name (one of :data:`VEHICLES`).
+        Case-insensitive.
+    :type vehicle_name: str
+
+    :returns: JSON object with the following keys:
+
+        - ``vehicle`` (*str*) — normalised vehicle name.
+        - ``stats`` (*dict*) — aggregate data:
+
+        - ``total_images`` (*int*) — total number of stored images.
+        - ``sol_range`` (*dict*) — ``{ "min": int, "max": int }``.
+        - ``date_range`` (*dict*) — ``{ "min": str, "max": str }``
+            with ISO-8601 date strings.
+        - ``cameras`` (*dict*) — mapping of camera code → image count,
+            ordered by descending count.
+
+        - ``timestamp`` (*str*) — UTC ISO-8601 response timestamp.
+
+    :rtype: flask.Response
+    :raises werkzeug.exceptions.NotFound: Returns HTTP 404 JSON when
+        *vehicle_name* is not present in :data:`VEHICLES`.
+    """
     if vehicle_name.lower() not in VEHICLES:
         return jsonify({
             "error": "Invalid vehicle name",
